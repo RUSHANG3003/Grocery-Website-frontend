@@ -1,6 +1,3 @@
-# Grocery-Website-frontend
-"A full-stack grocery e-commerce website with product management, cart, and secure checkout functionality."
-
 # 🛒 Grocery Website - Frontend
 
 This is the frontend of a Grocery E-commerce Web Application built using Next.js. It provides a fast, modern, and responsive user interface for browsing products, managing cart items, and placing orders online.
