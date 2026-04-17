@@ -14,7 +14,6 @@ This is the frontend of a Grocery E-commerce Web Application built using Next.js
 * ⚡ Fast performance with Next.js
 
 ---
-
 ## 🛠️ Tech Stack
 
 * Next.js
