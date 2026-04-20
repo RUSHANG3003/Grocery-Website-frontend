@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Clock, Truck, CheckCircle, Search, Navigation, ArrowRight, Loader2, MapPin } from 'lucide-react';
-import { getAllAvailableOrders } from '@/app/services/orderServices';
+import { getAllAvailableOrders, updateOrderStatus } from '@/app/services/orderServices';
+import toast from 'react-hot-toast';
 
 
 
@@ -47,15 +48,26 @@ export default function AdminOrdersPage() {
         }
     };
 
-    const handleUpdateStatus = (orderId, newStatus) => {
-        if (!newStatus) return;
-        // In a real scenario, you'll call an API to update status here
-        // e.g. await updateOrderStatus(orderId, newStatus)
-        setOrders(prevOrders =>
-            prevOrders.map(order =>
-                order.orderId === orderId ? { ...order, orderStatus: newStatus } : order
-            )
-        );
+    const handleUpdateOrderStatus = async (orderId, status) => {
+        const userId = localStorage.getItem('userId');
+
+        try {
+            const payload = {
+                orderId: parseInt(orderId),
+                status: status,
+                updatedBy: userId
+            };
+
+            await updateOrderStatus(payload);
+
+            toast.success("Order status updated successfully");
+
+            fetchOrders(); // reload data
+
+        } catch (err) {
+            console.error("Failed updating order status:", err);
+            toast.error("Failed to update order");
+        }
     };
 
     const getStatusConfig = (status) => {
@@ -225,7 +237,7 @@ export default function AdminOrdersPage() {
                                 <div className="p-5 bg-white mt-auto">
                                     {statusConf.nextAction ? (
                                         <button
-                                            onClick={() => handleUpdateStatus(order.orderId, statusConf.nextStatus)}
+                                            onClick={() => handleUpdateOrderStatus(order.orderId, statusConf.nextStatus)}
                                             className={`w-full py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 ${statusConf.actionClass}`}
                                         >
                                             {statusConf.nextAction} <ArrowRight size={14} />

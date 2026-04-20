@@ -44,3 +44,17 @@ export const getAllAvailableOrders = async () => {
         throw error;
     }
 };
+
+export const updateOrderStatus = async (orderData) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.put(`${API_URL}/updateOrderStatus`, orderData, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
