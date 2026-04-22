@@ -68,13 +68,15 @@ const LoginPage = () => {
                     localStorage.setItem('userId', response.data.userId);
                 }
 
-                // Admin Detection 
-                const isAdmin = response.data.role === 'ADMIN' || email.toLowerCase().includes('admin');
-                if (isAdmin) {
-                    localStorage.setItem('role', 'ADMIN');
+                // Admin & Delivery Detection 
+                const role = response.data.role;
+                localStorage.setItem('role', role);
+
+                if (role === 'ADMIN') {
                     router.push('/admin');
+                } else if (role === 'DELIVERY') {
+                    router.push('/delivery/orders');
                 } else {
-                    localStorage.setItem('role', 'USER');
                     router.push('/dashboard');
                 }
             } else {

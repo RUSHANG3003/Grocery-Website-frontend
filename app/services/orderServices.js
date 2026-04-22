@@ -58,3 +58,49 @@ export const updateOrderStatus = async (orderData) => {
         throw error;
     }
 };
+
+export const getAllDeliveryBoys = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/getDeliveryBoys`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+export const AssignDeliveryBoy = async (orderData) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.put(`${API_URL}/assignDeliveryBoy`, orderData, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getAssignedOrders = async (deliveryBoyId) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/getAssignedOrders?deliveryBoyId=${deliveryBoyId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
