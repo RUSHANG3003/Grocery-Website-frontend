@@ -68,6 +68,8 @@ export default function AdminOrdersPage() {
     };
 
     const handleAssign = async () => {
+
+        debugger
         if (!selectedBoyId) {
             toast.error("Please select a delivery partner");
             return;
@@ -357,8 +359,8 @@ export default function AdminOrdersPage() {
                                                 key={boy.userId}
                                                 onClick={() => setSelectedBoyId(String(boy.userId))}
                                                 className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${selectedBoyId === String(boy.userId)
-                                                        ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100'
-                                                        : 'border-gray-50 bg-gray-50 hover:border-gray-200'
+                                                    ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100'
+                                                    : 'border-gray-50 bg-gray-50 hover:border-gray-200'
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -391,8 +393,8 @@ export default function AdminOrdersPage() {
                                         onClick={handleAssign}
                                         disabled={!selectedBoyId}
                                         className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg ${selectedBoyId
-                                                ? 'bg-gray-900 text-white shadow-gray-200 active:scale-95'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                                            ? 'bg-gray-900 text-white shadow-gray-200 active:scale-95'
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                                             }`}
                                     >
                                         Confirm Assignment <ChevronRight size={14} />

@@ -6,18 +6,12 @@ import { Search, MapPin, User, ShoppingCart, LogOut, Edit, ChevronDown, X, Phone
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserProfile, updateUser } from "../services/userServices";
+import EditProfileModal from "../../components/EditProfileModal";
 
 export default function DashboardPage() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
-    const [profileData, setProfileData] = useState({
-        userId: "",
-        userName: "",
-        emailId: "",
-        mobileNumber: "",
-        updatedBy: ""
-    });
-    const [isUpdating, setIsUpdating] = useState(false);
+    const [userId, setUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -33,17 +27,9 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const id = localStorage.getItem("userId");
-
         if (id) {
-            setProfileData(prev => ({
-                ...prev,
-                userId: id,
-                updatedBy: id
-            }));
-
-            handleFetchProfile(id);
+            setUserId(id);
         }
-
         setIsLoading(false);
     }, []);
 
@@ -53,177 +39,18 @@ export default function DashboardPage() {
         router.push('/');
     };
 
-    const handleFetchProfile = async (userId) => {
-        try {
-            const response = await getUserProfile(userId);
-
-            if (response && response.status === true) {
-                setProfileData(response.data.user);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-
-    const handleUpdateProfile = async (e) => {
-        e.preventDefault();
-
-        // Validation: 10 digit mobile number
-        const mobileRegex = /^[0-9]{10}$/;
-        if (!mobileRegex.test(profileData.mobileNumber)) {
-            alert("Please enter a valid 10-digit mobile number.");
-            return;
-        }
-
-        setIsUpdating(true);
-
-
-        try {
-            // Exclude emailId and prepare payload with correct data types
-            const { emailId, userId, ...otherFields } = profileData;
-            const updatePayload = {
-                ...otherFields,
-                userId: Number(userId),
-                updatedBy: Number(userId) // Using userId as updatedBy
-            };
-
-            const response = await updateUser(updatePayload);
-            if (response && response.status === true) {
-                alert("Profile updated successfully!");
-                setShowProfileModal(false);
-            } else {
-                alert(response?.message || "Failed to update profile. Please try again.");
-            }
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            const backendMessage = error.response?.data?.message;
-            const statusText = error.response?.statusText;
-            const errorMessage = backendMessage || statusText || error.message || "Error updating profile.";
-            alert(`Update Error: ${errorMessage}`);
-        } finally {
-            setIsUpdating(false);
-        }
-
-    };
 
 
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20 relative">
             {/* Background Blur Overlay when modal is active */}
-            {showProfileModal && (
-                <div className="fixed inset-0 z-40 bg-white/20 backdrop-blur-md pointer-events-none" />
-            )}
-
             {/* Profile Update Modal */}
-            <AnimatePresence>
-                {showProfileModal && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                            onClick={() => setShowProfileModal(false)}
-                        />
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden p-8"
-                        >
-                            <button
-                                onClick={() => setShowProfileModal(false)}
-                                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                                <X size={20} className="text-gray-400" />
-                            </button>
-
-                            <div className="mb-6">
-                                <h2 className="text-2xl font-bold text-gray-900">Complete Your Profile</h2>
-                                <p className="text-gray-500 text-sm mt-1">Please provide your details to continue</p>
-                            </div>
-
-                            <form onSubmit={handleUpdateProfile} className="space-y-5">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600">
-                                            <UserIcon size={18} />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={profileData.userName}
-                                            onChange={(e) => setProfileData({ ...profileData, userName: e.target.value })}
-                                            className="block w-full rounded-xl border-gray-200 py-3 pl-10 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none border"
-                                            placeholder="Enter your name"
-                                        />
-                                    </div><br />
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Email ID</label>
-                                        <div className="relative group">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600">
-                                                <Mail size={18} />
-                                            </div>
-                                            <input
-                                                type="email"
-                                                required
-                                                value={profileData.emailId}
-                                                onChange={(e) => setProfileData({ ...profileData, emailId: e.target.value })}
-                                                className="block w-full rounded-xl border-gray-200 py-3 pl-10 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none border"
-                                                placeholder="Enter your email"
-                                                readOnly
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Mobile Number</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600">
-                                            <Phone size={18} />
-                                        </div>
-                                        <input
-                                            type="tel"
-                                            required
-                                            maxLength={10}
-                                            pattern="[0-9]{10}"
-                                            value={profileData.mobileNumber}
-                                            onChange={(e) => {
-                                                const val = e.target.value.replace(/\D/g, ''); // Only numbers
-                                                if (val.length <= 10) {
-                                                    setProfileData({ ...profileData, mobileNumber: val });
-                                                }
-                                            }}
-                                            className="block w-full rounded-xl border-gray-200 py-3 pl-10 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none border"
-                                            placeholder="Enter 10-digit mobile number"
-                                        />
-
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={isUpdating}
-                                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-500 active:scale-[0.98] transition-all disabled:opacity-70"
-                                >
-                                    {isUpdating ? (
-                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                    ) : (
-                                        <>
-                                            <Save size={18} />
-                                            Save Profile
-                                        </>
-                                    )}
-                                </button>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            <EditProfileModal 
+                isOpen={showProfileModal} 
+                onClose={() => setShowProfileModal(false)} 
+                userId={userId} 
+            />
 
             {/* Header */}
             <header className="bg-white sticky top-0 z-40 shadow-sm">
@@ -272,11 +99,7 @@ export default function DashboardPage() {
                                                     </p>
                                                 </div>
                                                 <button
-                                                    onClick={async () => {
-                                                        const userId = localStorage.getItem("userId");
-                                                        if (userId) {
-                                                            await handleFetchProfile(userId);
-                                                        }
+                                                    onClick={() => {
                                                         setShowProfileModal(true);
                                                         setIsProfileOpen(false);
                                                     }}

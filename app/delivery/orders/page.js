@@ -6,18 +6,26 @@ import { Package, Truck, CheckCircle, Search, MapPin, Loader2, Navigation, LogOu
 import { getAssignedOrders, updateOrderStatus } from '@/app/services/orderServices';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import EditProfileModal from '@/components/EditProfileModal';
+import { User } from 'lucide-react';
 
 export default function DeliveryOrdersPage() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [userId, setUserId] = useState(null);
     const router = useRouter();
 
     useEffect(() => {
         const role = localStorage.getItem('role');
+        const id = localStorage.getItem('userId');
+        
         if (role !== 'DELIVERY' && role !== 'ADMIN') {
             router.push('/');
             return;
         }
+        
+        setUserId(id);
         fetchAssignedOrders();
     }, []);
 
@@ -117,14 +125,30 @@ export default function DeliveryOrdersPage() {
                             {pendingOrders.length} Active Tasks
                         </p>
                     </div>
-                    <button 
-                        onClick={handleLogout}
-                        className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
-                    >
-                        <LogOut size={18} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => setShowProfileModal(true)}
+                            className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-emerald-50 hover:text-emerald-500 transition-all active:scale-90"
+                            title="Edit Profile"
+                        >
+                            <User size={18} />
+                        </button>
+                        <button 
+                            onClick={handleLogout}
+                            className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
+                            title="Logout"
+                        >
+                            <LogOut size={18} />
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <EditProfileModal 
+                isOpen={showProfileModal} 
+                onClose={() => setShowProfileModal(false)} 
+                userId={userId} 
+            />
 
             <div className="max-w-2xl mx-auto px-4 py-8">
                 {/* Active Assignments Section */}
