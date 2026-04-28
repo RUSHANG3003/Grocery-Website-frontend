@@ -17,20 +17,28 @@ export default function OrderHistoryPage() {
         fetchOrders();
     }, []);
 
+    const steps = [
+        { key: 'PLACED', label: 'Placed' },
+        { key: 'CONFIRMED', label: 'Confirmed' },
+        { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery' },
+        { key: 'DELIVERED', label: 'Delivered' }
+    ];
+
+
     const fetchOrders = async () => {
         try {
             setLoading(true);
             const userId = localStorage.getItem('userId');
-            if(!userId) {
+            if (!userId) {
                 router.push('/');
                 return;
             }
 
             const response = await getOrderHistory(userId);
-            
+
             if (response.status && response.data && response.data.orderHistory) {
                 const orderItems = response.data.orderHistory[0] || [];
-                
+
                 // Group items by orderIdPk 
                 const groupedOrders = orderItems.reduce((acc, item) => {
                     if (!acc[item.orderIdPk]) {
@@ -46,7 +54,7 @@ export default function OrderHistoryPage() {
                             city: item.city,
                             state: item.state,
                             pinCode: item.pinCode,
-                            date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }), 
+                            date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
                             items: []
                         };
                     }
@@ -61,7 +69,7 @@ export default function OrderHistoryPage() {
                     return acc;
                 }, {});
 
-                const ordersArray = Object.values(groupedOrders).sort((a,b) => b.orderIdPk - a.orderIdPk);
+                const ordersArray = Object.values(groupedOrders).sort((a, b) => b.orderIdPk - a.orderIdPk);
                 setOrders(ordersArray);
             }
         } catch (err) {
@@ -133,6 +141,7 @@ export default function OrderHistoryPage() {
                         {orders.map((order, index) => {
                             const isExpanded = expandedOrder === order.orderIdPk;
                             const isDelivered = order.orderStatus?.toUpperCase() === 'DELIVERED';
+                            const orderStepIndex = steps.findIndex((step) => step.key === order.orderStatus?.toUpperCase());
 
                             return (
                                 <motion.div
@@ -143,15 +152,15 @@ export default function OrderHistoryPage() {
                                     className="bg-white rounded-[1.5rem] border border-gray-100 overflow-hidden shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300"
                                 >
                                     {/* Order Main Card - High level attractive view */}
-                                    <div 
-                                        className="p-5 cursor-pointer relative overflow-hidden" 
+                                    <div
+                                        className="p-5 cursor-pointer relative overflow-hidden"
                                         onClick={() => toggleOrder(order.orderIdPk)}
                                     >
                                         {/* Subtle background gradient splash on delivered orders */}
                                         {isDelivered && (
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
                                         )}
-                                        
+
                                         <div className="flex justify-between items-start mb-4 relative z-10">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-2">
@@ -169,7 +178,7 @@ export default function OrderHistoryPage() {
                                                 </div>
                                                 <p className="text-xs font-bold text-gray-500 mb-0.5">Order #{order.orderIdPk}</p>
                                                 <p className="text-sm font-extrabold text-gray-900">
-                                                    ₹{order.totalAmount.toFixed(2)} <span className="text-gray-300 mx-1">•</span> <span className="font-bold text-gray-500">{order.items.length} item{order.items.length > 1 ? 's' : ''}</span> 
+                                                    ₹{order.totalAmount.toFixed(2)} <span className="text-gray-300 mx-1">•</span> <span className="font-bold text-gray-500">{order.items.length} item{order.items.length > 1 ? 's' : ''}</span>
                                                 </p>
                                             </div>
 
@@ -193,19 +202,70 @@ export default function OrderHistoryPage() {
                                                         <span className="text-[10px] font-black text-gray-500">+{order.items.length - 3}</span>
                                                     </div>
                                                 )}
+
+                                            </div>
+
+                                        </div>
+                                        <div className="mt-4">
+                                            <div className="flex items-center justify-between relative">
+
+                                                {/* Progress Line */}
+                                                <div className="absolute top-3 left-0 right-0 h-[2px] bg-gray-200 z-0" />
+
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ 
+                                                        width: `${(orderStepIndex / (steps.length - 1)) * 100}%` 
+                                                    }}
+                                                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                                                    className="absolute top-3 left-0 h-[2px] bg-emerald-500 z-0"
+                                                />
+
+                                                {steps.map((step, index) => {
+                                                    const isCompleted = index <= orderStepIndex;
+                                                    const isCurrent = index === orderStepIndex;
+
+                                                    return (
+                                                        <div key={step.key} className="relative z-10 flex flex-col items-center w-full">
+                                                            {/* Circle */}
+                                                            <motion.div
+                                                                initial={{ scale: 0.8, opacity: 0 }}
+                                                                animate={{ scale: 1, opacity: 1 }}
+                                                                transition={{ delay: index * 0.1 + 0.5 }}
+                                                                className={`w-6 h-6 flex items-center justify-center rounded-full text-[10px] font-bold transition-all duration-300
+                                                                    ${isCompleted
+                                                                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100'
+                                                                        : 'bg-gray-200 text-gray-500'
+                                                                    } ${isCurrent ? 'ring-4 ring-emerald-50' : ''}`}
+                                                            >
+                                                                {isCompleted ? '✓' : index + 1}
+                                                            </motion.div>
+
+                                                            {/* Label */}
+                                                            <motion.p 
+                                                                initial={{ opacity: 0, y: 5 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                transition={{ delay: index * 0.1 + 0.6 }}
+                                                                className={`text-[9px] mt-1.5 font-bold text-center leading-tight transition-colors duration-300
+                                                                    ${isCompleted ? 'text-emerald-600' : 'text-gray-400'}`}
+                                                            >
+                                                                {step.label}
+                                                            </motion.p>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
-
                                         <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-2">
                                             <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest transition-colors ${isExpanded ? 'text-emerald-600' : 'text-gray-400 group-hover:text-gray-600'}">
-                                                {isExpanded ? 'Hide Details' : 'View Details'} 
+                                                {isExpanded ? 'Hide Details' : 'View Details'}
                                                 <div className={`p-1 rounded-full ${isExpanded ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'}`}>
-                                                    {isExpanded ? <ChevronUp size={12} strokeWidth={3}/> : <ChevronDown size={12} strokeWidth={3}/>}
+                                                    {isExpanded ? <ChevronUp size={12} strokeWidth={3} /> : <ChevronDown size={12} strokeWidth={3} />}
                                                 </div>
                                             </div>
-                                            
+
                                             {isDelivered && (
-                                                <button 
+                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         // implement quick reorder to cart here
@@ -229,13 +289,13 @@ export default function OrderHistoryPage() {
                                                 transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
                                             >
                                                 <div className="p-5 bg-gradient-to-b from-gray-50/50 to-white border-t border-gray-100">
-                                                    
+
                                                     {/* Items List */}
                                                     <div className="mb-6">
                                                         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                                                             <ReceiptText size={14} /> Bill Details
                                                         </h4>
-                                                        
+
                                                         <div className="space-y-4">
                                                             {order.items.map((item) => (
                                                                 <div key={item.orderItemId} className="flex gap-4 items-center group bg-white p-3 rounded-2xl border border-gray-50 shadow-[0_2px_8px_-6px_rgba(0,0,0,0.1)] hover:border-emerald-100 transition-colors">
@@ -263,12 +323,12 @@ export default function OrderHistoryPage() {
                                                     {/* Beautiful Total and Meta Info box */}
                                                     <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm relative overflow-hidden">
                                                         <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-2xl"></div>
-                                                        
+
                                                         <div className="flex items-start justify-between mb-4 border-b border-gray-50 pb-4">
                                                             <div>
                                                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Payment Method</p>
                                                                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900 uppercase">
-                                                                    <CreditCard size={14} className="text-emerald-500"/> {order.paymentMethod}
+                                                                    <CreditCard size={14} className="text-emerald-500" /> {order.paymentMethod}
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
@@ -279,7 +339,7 @@ export default function OrderHistoryPage() {
 
                                                         <div>
                                                             <p className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-2 flex items-center gap-1.5">
-                                                                <MapPin size={12} /> Delivered To 
+                                                                <MapPin size={12} /> Delivered To
                                                                 <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[9px] font-extrabold">
                                                                     {order.addressType || 'HOME'}
                                                                 </span>
@@ -303,7 +363,7 @@ export default function OrderHistoryPage() {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <motion.div 
+                        <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             className="w-28 h-28 bg-white rounded-[2rem] border border-gray-100 flex items-center justify-center mb-6 shadow-xl shadow-emerald-50"
